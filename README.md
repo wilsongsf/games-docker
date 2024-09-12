@@ -26,7 +26,7 @@ Clonar o repositório:
 Se o código estiver hospedado em um repositório Git, você pode clonar usando:
 bash
 git clone https://github.com/wilsongsf/games-docker
-cd seu-repositorio
+cd games-docker
 
 Construir a imagem Docker:
 Para construir a imagem do projeto, execute o seguinte comando na raiz do projeto:
