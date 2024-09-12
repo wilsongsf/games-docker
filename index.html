@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Jogos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 8px; text-align: left; }
+        form { margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 8px; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <h1>CRUD de Jogos</h1>
+
+    <!-- Formulário para criar/atualizar jogo -->
+    <form id="gameForm">
+        <input type="hidden" id="gameId">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" required>
+        <label for="descricao">Descrição:</label>
+        <textarea id="descricao" required></textarea>
+        <label for="lancamento">Data de Lançamento:</label>
+        <input type="datetime-local" id="lancamento" required>
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Jogos</h2>
+    <table id="gamesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Lançamento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const apiUrl = 'http://localhost:8080/api/collections/game/records';
+        const gameForm = document.getElementById('gameForm');
+        const gamesTableBody = document.querySelector('#gamesTable tbody');
+        let isEditing = false;
+
+        // Carregar jogos ao iniciar
+        async function fetchGames() {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            gamesTableBody.innerHTML = '';  // Limpar tabela
+            data.items.forEach(game => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${game.id}</td>
+                    <td>${game.nome}</td>
+                    <td>${game.descricao}</td>
+                    <td>${new Date(game.lancamento).toLocaleString()}</td>
+                    <td>
+                        <button onclick="editGame('${game.id}', '${game.nome}', '${game.descricao}', '${game.lancamento}')">Editar</button>
+                        <button onclick="deleteGame('${game.id}')">Excluir</button>
+                    </td>
+                `;
+                gamesTableBody.appendChild(row);
+            });
+        }
+
+        // Criar ou atualizar jogo
+        gameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('gameId').value;
+            const nome = document.getElementById('nome').value;
+            const descricao = document.getElementById('descricao').value;
+            const lancamento = document.getElementById('lancamento').value;
+
+            const method = isEditing ? 'PUT' : 'POST';
+            const url = isEditing ? `${apiUrl}/${id}` : apiUrl;
+            const body = JSON.stringify({ nome, descricao, lancamento });
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+            });
+
+            if (response.ok) {
+                fetchGames();
+                resetForm();
+            }
+        });
+
+        // Editar jogo
+        function editGame(id, nome, descricao, lancamento) {
+            document.getElementById('gameId').value = id;
+            document.getElementById('nome').value = nome;
+            document.getElementById('descricao').value = descricao;
+            document.getElementById('lancamento').value = new Date(lancamento).toISOString().slice(0, 16);
+            isEditing = true;
+        }
+
+        // Excluir jogo
+        async function deleteGame(id) {
+            if (confirm('Tem certeza que deseja excluir este jogo?')) {
+                const response = await fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    fetchGames();
+                }
+            }
+        }
+
+        // Limpar formulário
+        function resetForm() {
+            document.getElementById('gameId').value = '';
+            document.getElementById('nome').value = '';
+            document.getElementById('descricao').value = '';
+            document.getElementById('lancamento').value = '';
+            isEditing = false;
+        }
+
+        // Inicializar
+        fetchGames();
+    </script>
+</body>
+</html>

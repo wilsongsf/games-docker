@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pocketbase:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pocketbase
+    ports:
+      - "8080:8080"  # Porta para o PocketBase
+    volumes:
+      - pb_data:/pb/pb_data
+      - ./index.html:/usr/share/nginx/html/index.html  # Mapeia o arquivo index.html
+
+volumes:
+  pb_data:
